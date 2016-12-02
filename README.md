@@ -1,0 +1,2 @@
+# BannerView
+基于collectionView创建的无限滑动轮播图
