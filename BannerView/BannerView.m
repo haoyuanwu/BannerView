@@ -8,6 +8,7 @@
 
 #import "BannerView.h"
 #import "BannerCollectionViewCell.h"
+//#import "UIImageView+WebCache.h"
 
 @interface BannerView ()<UICollectionViewDelegate,UICollectionViewDataSource>
 {
@@ -17,11 +18,13 @@
     NSTimer *timer;
     //记录滑动的位置
     CGFloat scrollX;
-
+    
     //滑块
     UIView *silderView;
+    
 }
 @property (nonatomic,strong) UICollectionView *collectionView;
+@property (nonatomic,strong)UIPageControl *pageCtl;
 @end
 
 static NSString *identifier = @"cellid";
@@ -33,16 +36,27 @@ static NSString *identifier = @"cellid";
         imageArr = [[NSMutableArray alloc] initWithCapacity:1];
         [self addSubview:self.collecionView];
         
-        silderView = [[UIView alloc] init];
-        silderView.backgroundColor = [UIColor redColor];
-        [self addSubview:silderView];
+        //        silderView = [[UIView alloc] init];
+        //        silderView.backgroundColor = [UIColor redColor];
+        //        [self addSubview:silderView];
+        [self addSubview:self.pageCtl];
         
     }
     return self;
 }
 
+- (UIPageControl *)pageCtl{
+    if (!_pageCtl) {
+        _pageCtl = [[UIPageControl alloc] initWithFrame:CGRectMake(0, self.frame.size.width-20, self.frame.size.width, 20)];
+        _pageCtl.tintColor = UIColor.grayColor;
+        _pageCtl.userInteractionEnabled = NO;
+    }
+    return _pageCtl;
+}
+
 -(void)setUrlArray:(NSArray *)urlArray{
     _urlArray = urlArray;
+    _pageCtl.numberOfPages = self.urlArray.count;
     if (urlArray.count == 0) {
         return;
     }
@@ -62,10 +76,11 @@ static NSString *identifier = @"cellid";
         timer = nil;
     }
     
-    timer = [NSTimer scheduledTimerWithTimeInterval:2 repeats:YES block:^(NSTimer * _Nonnull timer) {
+    timer = [NSTimer scheduledTimerWithTimeInterval:5 repeats:YES block:^(NSTimer * _Nonnull timer) {
         scrollX = self.collecionView.contentOffset.x;
         scrollX += self.frame.size.width;
         NSInteger index = scrollX/self.frame.size.width;
+        self.pageCtl.currentPage = index-1;
         if (index < imageArr.count) {
             [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:index inSection:0] atScrollPosition:UICollectionViewScrollPositionNone animated:YES];
         }else{
@@ -76,6 +91,7 @@ static NSString *identifier = @"cellid";
             if (scrollX == self.collecionView.contentSize.width - self.frame.size.width) {
                 scrollX = self.frame.size.width;
                 [self.collectionView scrollToItemAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0] atScrollPosition:UICollectionViewScrollPositionNone animated:NO];
+                self.pageCtl.currentPage = 0;
             }
         });
     }];
@@ -90,7 +106,7 @@ static NSString *identifier = @"cellid";
         flowLayout.itemSize = self.frame.size;
         flowLayout.scrollDirection = UICollectionViewScrollDirectionHorizontal;
         
-        _collectionView = [[UICollectionView alloc] initWithFrame:self.frame collectionViewLayout:flowLayout];
+        _collectionView = [[UICollectionView alloc] initWithFrame:CGRectMake(0, 0, self.frame.size.width, self.frame.size.height) collectionViewLayout:flowLayout];
         _collectionView.delegate = self;
         _collectionView.dataSource = self;
         _collectionView.backgroundColor = [UIColor whiteColor];
@@ -108,8 +124,9 @@ static NSString *identifier = @"cellid";
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath{
     BannerCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:identifier forIndexPath:indexPath];
-    cell.textLabel.text = [NSString stringWithFormat:@"%@",imageArr[indexPath.item]];
-//    cell.imageView.image = imageArr[indexPath.item];
+    //    cell.textLabel.text = [NSString stringWithFormat:@"%@",imageArr[indexPath.item]];
+        cell.imageView.image = [UIImage imageNamed:imageArr[indexPath.item]];
+//    [cell.imageView sd_setImageWithURL:[NSURL URLWithString:imageArr[indexPath.item]] placeholderImage:[UIImage imageNamed:@""]];
     return cell;
 }
 
@@ -149,16 +166,18 @@ static NSString *identifier = @"cellid";
         self.collecionView.contentOffset = CGPointMake(self.frame.size.width, 0);
     }
     scrollX = scrollView.contentOffset.x;
+    NSInteger index = scrollX/self.frame.size.width;
+    self.pageCtl.currentPage = index-1;
     //再次打开计时器
     [self openTimer];
 }
 
 /*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/
+ // Only override drawRect: if you perform custom drawing.
+ // An empty implementation adversely affects performance during animation.
+ - (void)drawRect:(CGRect)rect {
+ // Drawing code
+ }
+ */
 
 @end
